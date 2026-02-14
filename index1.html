@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>College Timetable 2026</title>
+  <style>
+    body{ font-family: Arial, sans-serif; background:#f2f4f8; padding:20px; }
+    h1{ text-align:center; }
+    .Gmail{ background:#fff; padding:20px; width:300px; margin:20px auto; border-radius:5px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+    label{ font-weight:bold; display:block; margin-top:10px; }
+    input, select{ padding:10px; width:100%; box-sizing:border-box; margin-bottom: 10px; }
+    button{ margin-top:15px; padding:10px; width:100%; background:red; color:#fff; border:none; border-radius:5px; cursor:pointer; font-weight: bold; }
+    button:hover{ background: darkred; }
+    table{ width:100%; border-collapse:collapse; margin-top:20px; background: #fff; }
+    th,td{ border:1px solid #ccc; padding:10px; text-align:center; }
+    th{ background:gray; color:#fff; }
+    .present{ color:green; font-weight:bold; }
+    .absent{ color:red; font-weight:bold; }
+    #output { margin-top: 30px; }
+  </style>
+</head>
+<body>
+
+<h1>College Timetable & Attendance</h1>
+
+<div class="Gmail">
+  <label>Student Gmail:</label>
+  <input type="email" id="email" placeholder="example@gmail.com" />
+
+  <label>Course:</label>
+  <select id="course">
+    <option value="">-- Select Course --</option>
+    <option value="BCA">BCA</option>
+    <option value="BSc">BSc</option>
+  </select>
+
+  <label>Day:</label>
+  <select id="day">
+    <option value="">-- Select Day --</option>
+    <option value="Monday">Monday</option>
+    <option value="Tuesday">Tuesday</option>
+    <option value="Wednesday">Wednesday</option>
+    <option value="Thursday">Thursday</option>
+    <option value="Friday">Friday</option>
+    <option value="Saturday">Saturday</option>
+  </select>
+
+  <button id="showBtn">Show Timetable</button>
+</div>
+
+<div id="output" style="display:none">
+  <h3 id="studentInfo"></h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Subject</th>
+        <th>Attendance</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<script>
+  const timetable = {
+    BCA: {
+      Monday: [
+        { time: "9-10", subject: "Python", attendance: "Present" },
+        { time: "10-11", subject: "Data handling", attendance: "Absent" },
+        { time: "11-12", subject: "Dynamic", attendance: "Present"},
+        { time: "12-1", subject: "Grooming", attendance: "Present"}
+      ],
+      Tuesday: [
+        { time: "9-10", subject: "Digital marketing", attendance: "Present" },
+        { time: "10-11", subject: "Opreting system", attendance: "Present" }
+      ],
+      Wednesday: [
+        { time: "9-10", subject: "Python", attendance: "Absent" }
+      ]
+    },
+    BSc: {
+      Monday: [{ time: "9-10", subject: "Physics", attendance: "Present" }]
+    }
+  };
+
+  document.getElementById("showBtn").addEventListener("click", async function () {
+    // Check karne ke liye ki button click hua
+    console.log("Button Clicked!");
+
+    const email = document.getElementById("email").value.trim();
+    const course = document.getElementById("course").value;
+    const day = document.getElementById("day").value;
+
+    if (email === "" || course === "" || day === "") {
+      alert("Please fill all fields correctly");
+      return;
+    }
+
+    // --- 🔹 Backend Save Logic ---
+    try {
+        const response = await fetch('http://localhost:3000/student', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, course: course })
+        });
+
+        if(response.ok){
+          alert("Success: Data saved to MongoDB Atlas!");
+        }
+    } catch (err) {
+        console.log("Database connection error, showing timetable only.");
+    }
+
+    // --- Timetable Logic ---
+    const dayData = timetable[course] ? timetable[course][day] : null;
+    const body = document.getElementById("tableBody");
+    body.innerHTML = "";
+
+    if (!dayData || dayData.length === 0) {
+      body.innerHTML = <tr><td colspan="3">No lectures found</td></tr>;
+    } else {
+      dayData.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${item.time}</td>
+          <td>${item.subject}</td>
+          <td class="${item.attendance === 'Present' ? 'present' : 'absent'}">${item.attendance}</td>
+        `;
+        body.appendChild(row);
+      });
+    }
+
+    document.getElementById("studentInfo").innerText = `Student: ${email} | Course: ${course} | Day: ${day}`;
+    document.getElementById("output").style.display = "block";
+  });
+</script>
+
+</body>
+</html>
